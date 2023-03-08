@@ -99,20 +99,37 @@ void main(void) {
     /** Prueba de reset **/
     __delay_ms(1000);
     _LATD9 = 0;
-    Vector_Datos[0x0]=10;
-    Vector_Datos[0x1]=20;
-    Vector_Datos[0x2]=30;
-    Vector_Datos[0x3]=40;
-    Vector_Datos[14]=50;
+    Vector_Datos[0x0]=0;
+    Vector_Datos[0x1]=0;
+    Vector_Datos[0x2]=0;
+    Vector_Datos[0x3]=0;
+    Vector_Datos[14]=0;
     /*----------------------------- Funciones de PWM ---------------------------*/
     Por_PWM (0.0);
     float a = 0.0;
     while(1){
          _LATD9 = 1;
-        MensajeRS232("Hola Mundo\n");
-        MensajeRS232(BufferR2);
-        Transmitir(Vector_Datos[14]);
-        Transmitir('-');
+        MensajeRS232("Valores guardados en registros\n");
+        MensajeRS232("Vector de datos Posición 0= ");
+        Transmitir(Vector_Datos[0]+48);
+        MensajeRS232("\nVector de datos Posición 1= ");
+        Transmitir(Vector_Datos[1]+48);
+        Transmitir('\n');
+        
+        /* Validación de funcionamiento con LEDS*/
+        if(Vector_Datos[0]==1){
+            _LATB0=1;
+        }
+        else{
+            _LATB0=0;
+        }
+        if(Vector_Datos[1]==1){
+            _LATB2=1;
+        }
+        else{
+            _LATB2=0;
+        }
+        
         a=(Vector_Datos[14]*0.01); //Porque no puedo dividir?
         ImprimirDecimal(a);
         Transmitir('-');

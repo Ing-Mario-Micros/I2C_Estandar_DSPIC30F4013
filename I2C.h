@@ -42,6 +42,9 @@ unsigned char Registro_Temp, Dato_Temp;
 char Error ;
 char Vector_Datos[25];
 
+unsigned char Contador=0, Apuntador=0; //Variables del sistema para I2C Esclavo
+
+
 
 
 
@@ -122,14 +125,14 @@ void Recepcion_I2C(void){
     char aux = 0;
     if(_R_W == 0){//Si el bit R_W esta en cero la dirección fue de escritura
         if(_D_A == 1){//Si el bit D_A es igual a 1 el valor resivido es un dato
-            //_LATB2=1;
-            if(I2CRCV==1){
-                _LATB0=1;
+            if(Contador==0){
+                Apuntador=I2CRCV;//Guardado de la posición del vector en apuntador
+                Contador=1; //Incremento para fase de guardado
             }
-            else{
-                _LATB0=0;
+            else if(Contador==1){
+                Vector_Datos[Apuntador]=I2CRCV;//Guardado de dato en vector de datos
+                Contador=0; //reinicio de sistema de guardado
             }
-            aux=I2CRCV;
         }
         else{
             /* En el caso que no sea un dato el valor resivido se guarda 
@@ -138,6 +141,19 @@ void Recepcion_I2C(void){
              */
             aux=I2CRCV;
         }
+    }
+    else{//la dirección fue de Lectura
+        if(_SCLREL==0){
+            I2CTRN=Vector_Datos[Apuntador];//Cargar dato al registro de envio
+            while(_TBF==0);//Esperar a que el registro de envio esté lleno
+            _SCLREL=1;     //Liberar Bus I2C
+            Apuntador++;   //Aumentar el apuntador
+            Contador=0;    //Reiniciar el sistema
+        }
+        aux=I2CRCV;
+    }
+    if(_P==1){
+        Contador=0;    //Reiniciar el sistema
     }
     _SI2CIF=0; // Bandera de Interrupción en 0 Para que vuelva a ocurrir
 }

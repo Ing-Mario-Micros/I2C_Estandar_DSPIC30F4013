@@ -21,7 +21,8 @@ extern "C" {
 #include<xc.h>
 #define FCY 1842500
 #include <libpic30.h>
-
+/*--------------------------Funcion de Configuración I2C------------------*/
+void Activar_I2C (void);
 /*------------------------------ Funciones I2C Esclavo ---------------------*/
 void Interrupcion_Recepcion_I2C(void);
 void Recepcion_I2C(void);
@@ -47,7 +48,24 @@ unsigned char Contador=0, Apuntador=0; //Variables del sistema para I2C Esclavo
 
 
 
-
+/*--------------------------Funcion de Configuración I2C------------------*/
+void Activar_I2C (void){
+    /***CONFIGURACIÓN I2C***/
+    /*La formula necesaria para deffinir el valor correspondiente al registro 
+     * I2CBRG es: I2CBRG= ((FCY/FI2C)-(FCY/1111111))-1 con esto se logran 
+     * definir la velocidad del Bus*/
+    I2CBRG=44;//Configuración de velocidad a 100kHz
+    I2CCON=0x9100; //Registro de configuración I2C
+    /**** I2C Esclavo ****/
+    /*-la direcion definida tiene un corrimiento de 1 hacia la izquierda donde
+     * al definir una dirección como 0x08 la dirección con la cual se identifica
+     * el DSPIC es 0x10 ya que tuvo un corrimiento de de uno cuando se cargo al
+     * registro fisico del micro I2CRSA-*/
+    I2CADD = 0x08; //Registro de dirección I2C, Direccion de identificación 0x10
+    /**** Interrupción I2C ****/
+    _SI2CIE = 1; //Activación de interrupción I2C modo esclavo
+    _SI2CIF=0;   //Inicialización de bandera de interrupción en 0
+}
 /*------------------------------ Funciones I2C Esclavo ---------------------*/
 void Interrupcion_Recepcion_I2C(void){
     char aux = 0;
@@ -121,6 +139,11 @@ void Interrupcion_Recepcion_I2C(void){
 
     _SI2CIF=0;
 }
+/* Está es la función estandar de I2C que permite que cualquier dispositivo I2C 
+ * pueda interactura correctamente con este dispositivo reconociendoce con el 
+ * ladirección y un registro en el cual se guardan los datos llamado Vector de 
+ * datos en el cual se guardan los valores enviados desde el controlador externo
+ */
 void Recepcion_I2C(void){
     char aux = 0;
     if(_R_W == 0){//Si el bit R_W esta en cero la dirección fue de escritura

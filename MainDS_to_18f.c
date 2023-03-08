@@ -10,7 +10,8 @@
 #include "RS232.h"
 #include "I2C.h"
 //Fosc = 7.37MHz Por Defecto
-#define FCY 1842500
+//Fosc en uso = 20MHz -> FCY = Fosc/4 -> 20x10^6/4 = 5x10^6
+#define FCY 5000000    //Definición de la frecuencia de bus del micro
 #include <libpic30.h>
 #include <math.h>
 
@@ -19,7 +20,7 @@
 // 'C' source line config statements
 
 // FOSC
-#pragma config FOSFPR = FRC             // Oscillator (Internal Fast RC (No change to Primary Osc Mode bits))
+#pragma config FOSFPR = HS              // Oscillator (HS)
 #pragma config FCKSMEN = CSW_FSCM_OFF   // Clock Switching and Monitor (Sw Disabled, Mon Disabled)
 
 // FWDT
@@ -30,6 +31,7 @@
 // FBORPOR
 #pragma config FPWRT = PWRT_64          // POR Timer Value (64ms)
 #pragma config MCLRE = MCLR_EN          // Master Clear Enable (Enabled)
+#pragma config BOREN = PBOR_OFF         // PBOR Enable (Disabled)
 
 // FICD
 #pragma config ICS = ICS_PGD            // Comm Channel Select (Use PGC/EMUC and PGD/EMUD)
@@ -37,7 +39,8 @@
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
-#define LED_CPU _LATB1 //Definición del pin de led CPU
+#define LED_CPU _LATB1    //Definición del pin de led CPU
+#define LED_TEST _LATB0 //Definición del pin de led Test
 
 /*------------------------- Función de Interrupción Timer 1 ----------------*/
 void __attribute__((interrupt,auto_psv)) _T1Interrupt(void);
@@ -66,10 +69,10 @@ void main(void) {
     _TRISB2=0; //Configuración del pin de led Test como salida
     _CN5PUE=1;
     /*------------------ Configuración del Timer 1 -------------------------*/
-    PR1=7196;
+    PR1=9765;//Timer configurado en 0.5Seg
     TMR1=0;
     _T1IF=0;
-    T1CON = 0x8020;
+    T1CON = 0x8030;
     /*------------------ Configuración de RS232 ---------------------------*/
     Activar_RS232();
     /*------------------- Configuración de PWM -----------------------------*/
@@ -87,15 +90,10 @@ void main(void) {
     _T1IE = 1;  //Habilitación Interrupción Timer1
     _T1IP = 7;  //Definición de Prioridad del Timer1
     _T1IF = 0;  //Inicializar la bandera de interrupción en 0
-    /**** Interrupción I2C ****/
-    _SI2CIE = 1;
+    
     
     /*------------------- CONFIGURACIÓN I2C --------------------------------*/
-    I2CBRG=16;
-    I2CCON=0x9100; //Registro de configuración I2C
-    /**** I2C Esclavo ****/
-    I2CADD = 0x08; //Registro de dirección I2C 
-    _SI2CIF=0;
+    Activar_I2C();
     /** Prueba de reset **/
     __delay_ms(1000);
     _LATD9 = 0;

@@ -37,7 +37,7 @@ extern char Vector_Datos[];
 void Activar_RS232(void){
     U2MODE=0x0000;
     U2STA=0x0000;
-    U2BRG=11;
+    U2BRG=32;//U2BRG=(FCY/(16*Baud Rate))-1
     U2MODE=U2MODE|0x8000;
     U2STA=U2STA|0x0400;
     /***Interrupción Recepción de datos***/
